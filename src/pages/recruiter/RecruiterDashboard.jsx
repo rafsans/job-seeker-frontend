@@ -12,12 +12,12 @@ import {
   Eye,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../../api/axiosInstance';
+import { getRecruiterJobs, getRecentApplicants, getRecruiterProfile } from '../../api/recruiter';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
-const fetchRecruiterJobs    = () => api.get('/recruiter/jobs').then(r => r.data.data);
-const fetchRecentApplicants = () => api.get('/recruiter/applicants?limit=5&page=1').then(r => r.data.data);
-const fetchCompanyProfile   = () => api.get('/recruiter/profile').then(r => r.data.data);
+const fetchRecruiterJobs    = () => getRecruiterJobs().then(r => r.data);
+const fetchRecentApplicants = () => getRecentApplicants({ limit: 5, page: 1 }).then(r => r.data);
+const fetchCompanyProfile   = () => getRecruiterProfile().then(r => r.data);
 
 // ─── Status badge helper ──────────────────────────────────────────────────────
 const statusBadge = (status) => {
@@ -103,7 +103,7 @@ const RecruiterDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Welcome, {companyName} 👋
+            Welcome, {companyName}
           </h1>
           <p className="text-gray-500 mt-1 font-medium">Manage your hiring process and company profile.</p>
         </div>

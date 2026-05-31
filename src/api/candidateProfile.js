@@ -11,6 +11,21 @@ export const updateCandidateProfile = async (payload) => {
   return res.data.data;
 };
 
+export const uploadResume = async (formData) => {
+  const res = await api.put('/candidate/resume', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
+export const analyzeResume = async () => {
+  // Empty POST, backend will fetch the uploaded resume automatically
+  const res = await api.post('/candidate/resume/analyze');
+  return res.data.data;
+};
+
 
 export const getEducations = async () => {
   const res = await api.get('/candidate/educations');

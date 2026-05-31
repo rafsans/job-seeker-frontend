@@ -12,6 +12,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -108,9 +109,10 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Password and Confirm Password do not match.");
+      setFieldErrors({ confirmPassword: "Password and Confirm Password do not match." });
       return;
     }
 
@@ -131,8 +133,20 @@ const Register = () => {
         navigate("/");
       }, 1500);
     } catch (err) {
+      const data = err.response?.data;
+      
+      if (data?.errors && Array.isArray(data.errors)) {
+        const errorsMap = {};
+        data.errors.forEach(errItem => {
+          if (errItem.path) {
+            errorsMap[errItem.path] = errItem.msg || errItem.message;
+          }
+        });
+        setFieldErrors(errorsMap);
+      }
+      
       setError(
-        err.response?.data?.message || "Registration failed. Please try again.",
+        data?.message || "Registration failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -196,6 +210,7 @@ const Register = () => {
           placeholder="example@mail.com"
           value={formData.email}
           onChange={handleChange}
+          error={fieldErrors.email}
           required
         />
 
@@ -206,6 +221,7 @@ const Register = () => {
           placeholder="********"
           value={formData.password}
           onChange={handleChange}
+          error={fieldErrors.password}
           required
         />
 
@@ -216,6 +232,7 @@ const Register = () => {
           placeholder="********"
           value={formData.confirmPassword}
           onChange={handleChange}
+          error={fieldErrors.confirmPassword}
           required
         />
 

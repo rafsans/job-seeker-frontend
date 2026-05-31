@@ -4,6 +4,11 @@ import { MapPin, DollarSign, Clock, Bookmark, Trash2 } from 'lucide-react';
 import Button from './Button';
 import { cn } from '../utils/cn';
 
+const normalizeJobType = (t) => {
+  if (!t) return '';
+  return t.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+};
+
 const JobCard = ({
   job,
   layout = 'grid', // 'grid' or 'list'
@@ -11,6 +16,7 @@ const JobCard = ({
   onBookmarkClick,
   onApplyClick,
   onDeleteClick,
+  hasApplied = false,
   className = '',
   ...props
 }) => {
@@ -23,6 +29,7 @@ const JobCard = ({
     salary,
     time,
     type,
+    category,
     tags = [],
   } = job;
 
@@ -52,7 +59,12 @@ const JobCard = ({
               )}
               {type && (
                 <span className="px-2 py-0.5 bg-gray-50 text-gray-400 text-[10px] font-bold uppercase rounded border border-gray-100">
-                  {type}
+                  {normalizeJobType(type)}
+                </span>
+              )}
+              {category && (
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded border border-blue-100">
+                  {category}
                 </span>
               )}
             </div>
@@ -61,12 +73,13 @@ const JobCard = ({
         <div className="flex items-center gap-3 self-end sm:self-auto">
           {onApplyClick && (
             <Button
-              variant="primary"
+              variant={hasApplied ? "outline" : "primary"}
               size="sm"
               onClick={onApplyClick}
-              className="px-6 py-2.5 text-sm"
+              disabled={hasApplied}
+              className={cn("px-6 py-2.5 text-sm", hasApplied && "bg-gray-100 text-gray-500 border-gray-100 opacity-80 cursor-not-allowed")}
             >
-              Apply Now
+              {hasApplied ? "Applied" : "Apply Now"}
             </Button>
           )}
           {onDeleteClick && (
@@ -103,17 +116,24 @@ const JobCard = ({
               onClick={onBookmarkClick}
               className={cn(
                 'text-gray-300 hover:text-[#0052FF] transition-colors p-1.5 hover:bg-blue-50 rounded-lg',
-                isBookmarked && 'text-[#0052FF]'
+                isBookmarked && 'text-[#0052FF] bg-blue-50'
               )}
             >
-              <Bookmark size={20} />
+              <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />
             </button>
           )}
         </div>
         <h3 className="font-bold text-lg text-gray-900 group-hover:text-[#0052FF] transition-colors mb-1">
           {position}
         </h3>
-        <p className="text-sm font-medium text-gray-500 mb-4">{company}</p>
+        <p className="text-sm font-medium text-gray-500 mb-2">{company}</p>
+        {category && (
+          <div className="mb-4">
+            <span className="px-2 py-1 bg-blue-50 text-[#0052FF] text-[10px] font-bold uppercase tracking-wider rounded-md border border-blue-100">
+              {category}
+            </span>
+          </div>
+        )}
 
         <div className="space-y-2 mb-6">
           {location && (

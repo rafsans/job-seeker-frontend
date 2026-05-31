@@ -25,7 +25,12 @@ import {
   addSkill,
   removeSkill as removeSkillApi,
   getCertifications,
+  updateCandidateProfile,
+  createEducation, updateEducation, deleteEducation,
+  createExperience, updateExperience, deleteExperience,
+  createCertification, updateCertification, deleteCertification,
 } from '../../api/candidateProfile';
+import { toast } from 'react-hot-toast';
 
 const JobSeekerProfile = () => {
   const [modalType, setModalType] = useState(null);
@@ -134,11 +139,75 @@ const JobSeekerProfile = () => {
     setEditItem(null);
   };
 
-  const handleDelete = (id) => {
-    if (modalType === 'edu') setEducations(educations.filter((e) => e.id !== id));
-    if (modalType === 'exp') setExperiences(experiences.filter((e) => e.id !== id));
-    if (modalType === 'cert') setCertifications(certifications.filter((e) => e.id !== id));
-    closeModal();
+  const handleDelete = async (id) => {
+    try {
+      if (modalType === 'edu') {
+        await deleteEducation(id);
+        setEducations(educations.filter((e) => e.id !== id));
+      }
+      if (modalType === 'exp') {
+        await deleteExperience(id);
+        setExperiences(experiences.filter((e) => e.id !== id));
+      }
+      if (modalType === 'cert') {
+        await deleteCertification(id);
+        setCertifications(certifications.filter((e) => e.id !== id));
+      }
+      toast.success('Successfully deleted!');
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete item.');
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const data = Object.fromEntries(fd.entries());
+
+    // Parse boolean for checkbox
+    if (modalType === 'edu' || modalType === 'exp') {
+      data.is_current = fd.get('is_current') === 'on';
+    }
+
+    try {
+      if (modalType === 'basic') {
+        // Need to structure basic info as expected by profile schema
+        await updateCandidateProfile(data);
+        const updated = await getCandidateProfile();
+        setProfile(updated);
+      } else if (modalType === 'edu') {
+        if (editItem) {
+          await updateEducation(editItem.id, data);
+        } else {
+          await createEducation(data);
+        }
+        const updated = await getEducations();
+        setEducations(updated || []);
+      } else if (modalType === 'exp') {
+        if (editItem) {
+          await updateExperience(editItem.id, data);
+        } else {
+          await createExperience(data);
+        }
+        const updated = await getExperiences();
+        setExperiences(updated || []);
+      } else if (modalType === 'cert') {
+        if (editItem) {
+          await updateCertification(editItem.id, data);
+        } else {
+          await createCertification(data);
+        }
+        const updated = await getCertifications();
+        setCertifications(updated || []);
+      }
+      toast.success('Successfully saved changes.');
+      closeModal();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to save changes.');
+    }
   };
 
   // ─── Loading / Error ─────────────────────────────────────────────────────────
@@ -172,7 +241,7 @@ const JobSeekerProfile = () => {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onClick={closeModal} />
-        <div className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <form onSubmit={handleSave} className="relative bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
           <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
             <h3 className="text-xl font-bold text-gray-900">
               {modalType === 'basic' ? 'Edit Personal Information' : title}
@@ -188,35 +257,35 @@ const JobSeekerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
-                  <input type="text" defaultValue={personal.firstname} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="firstname" defaultValue={personal.firstname} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
-                  <input type="text" defaultValue={personal.lastname} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="lastname" defaultValue={personal.lastname} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                  <input type="text" defaultValue={personal.phone} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="phone" defaultValue={personal.phone} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Country</label>
-                  <input type="text" defaultValue={personal.country} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="country" defaultValue={personal.country} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Street Address</label>
-                  <input type="text" defaultValue={personal.address} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="address" defaultValue={personal.address} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">City</label>
-                  <input type="text" defaultValue={personal.city} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="city" defaultValue={personal.city} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Province</label>
-                  <input type="text" defaultValue={personal.province} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="province" defaultValue={personal.province} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Postal Code</label>
-                  <input type="text" defaultValue={personal.postalCode} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="postalCode" defaultValue={personal.postalCode} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
             )}
@@ -273,35 +342,35 @@ const JobSeekerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Institution</label>
-                  <input type="text" defaultValue={editItem?.institution} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="institution" defaultValue={editItem?.institution} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Degree</label>
-                  <input type="text" defaultValue={editItem?.degree} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="degree" defaultValue={editItem?.degree} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Field of Study</label>
-                  <input type="text" defaultValue={editItem?.fieldOfStudy} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="field_of_study" defaultValue={editItem?.fieldOfStudy} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
-                  <input type="date" defaultValue={editItem?.startDate} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="start_date" defaultValue={editItem?.startDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
-                  <input type="date" defaultValue={editItem?.endDate} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="end_date" defaultValue={editItem?.endDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Grade (GPA)</label>
-                  <input type="text" defaultValue={editItem?.grade} placeholder="3.8 / 4.0" className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="grade" defaultValue={editItem?.grade} placeholder="3.8 / 4.0" className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div className="flex items-center gap-3 pt-8">
-                  <input type="checkbox" defaultChecked={editItem?.isCurrent} className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <input type="checkbox" name="is_current" defaultChecked={editItem?.isCurrent} className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                   <span className="text-sm font-bold text-gray-700">Currently Studying</span>
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                  <textarea rows={3} defaultValue={editItem?.description} placeholder="Activities and societies..." className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <textarea rows={3} name="description" defaultValue={editItem?.description} placeholder="Activities and societies..." className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
             )}
@@ -311,15 +380,15 @@ const JobSeekerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Company Name</label>
-                  <input type="text" defaultValue={editItem?.companyName} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="company" defaultValue={editItem?.companyName} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Position</label>
-                  <input type="text" defaultValue={editItem?.position} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="position" defaultValue={editItem?.position} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Employment Type</label>
-                  <select defaultValue={editItem?.employmentType} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                  <select name="employment_type" defaultValue={editItem?.employmentType} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
                     <option value="FULL_TIME">Full Time</option>
                     <option value="PART_TIME">Part Time</option>
                     <option value="CONTRACT">Contract</option>
@@ -330,7 +399,7 @@ const JobSeekerProfile = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Location Type</label>
-                  <select defaultValue={editItem?.locationType} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                  <select name="location_type" defaultValue={editItem?.locationType} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold">
                     <option value="ONSITE">On-site</option>
                     <option value="REMOTE">Remote</option>
                     <option value="HYBRID">Hybrid</option>
@@ -338,19 +407,23 @@ const JobSeekerProfile = () => {
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Location</label>
-                  <input type="text" defaultValue={editItem?.location} placeholder="Singapore, SG" className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="location" defaultValue={editItem?.location} placeholder="Singapore, SG" className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Start Date</label>
-                  <input type="date" defaultValue={editItem?.startDate} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="start_date" defaultValue={editItem?.startDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">End Date</label>
-                  <input type="date" defaultValue={editItem?.endDate} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="end_date" defaultValue={editItem?.endDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                </div>
+                <div className="flex items-center gap-3 pt-8">
+                  <input type="checkbox" name="is_current" defaultChecked={editItem?.isCurrent} className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-sm font-bold text-gray-700">Currently Working Here</span>
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                  <textarea rows={3} defaultValue={editItem?.description} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <textarea rows={3} name="description" defaultValue={editItem?.description} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
             )}
@@ -360,31 +433,31 @@ const JobSeekerProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Name</label>
-                  <input type="text" defaultValue={editItem?.name} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="name" defaultValue={editItem?.name} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Issuing Organization</label>
-                  <input type="text" defaultValue={editItem?.issuingOrganization} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="issuingOrganization" defaultValue={editItem?.issuingOrganization} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Issue Date</label>
-                  <input type="date" defaultValue={editItem?.issueDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="issueDate" defaultValue={editItem?.issueDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Expiry Date</label>
-                  <input type="date" defaultValue={editItem?.expiryDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="date" name="expiryDate" defaultValue={editItem?.expiryDate?.split('T')[0]} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Credential ID</label>
-                  <input type="text" defaultValue={editItem?.credentialId} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="text" name="credentialId" defaultValue={editItem?.credentialId} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2">Credential URL</label>
-                  <input type="url" defaultValue={editItem?.credentialUrl} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <input type="url" name="credentialUrl" defaultValue={editItem?.credentialUrl} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
-                  <textarea rows={3} defaultValue={editItem?.description} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
+                  <textarea rows={3} name="description" defaultValue={editItem?.description} className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none" />
                 </div>
               </div>
             )}
@@ -402,15 +475,17 @@ const JobSeekerProfile = () => {
               <div />
             )}
             <div className="flex gap-3">
-              <button onClick={closeModal} className="px-6 py-2.5 bg-white text-gray-600 font-bold rounded-xl border border-gray-200">
+              <button type="button" onClick={closeModal} className="px-6 py-2.5 bg-white text-gray-600 font-bold rounded-xl border border-gray-200">
                 Cancel
               </button>
-              <button onClick={closeModal} className="px-8 py-2.5 bg-[#0052FF] text-white font-bold rounded-xl shadow-lg shadow-blue-200">
-                Save Changes
-              </button>
+              {modalType !== 'skills' && (
+                <button type="submit" className="px-8 py-2.5 bg-[#0052FF] text-white font-bold rounded-xl shadow-lg shadow-blue-200">
+                  Save Changes
+                </button>
+              )}
             </div>
           </div>
-        </div>
+        </form>
       </div>
     );
   };

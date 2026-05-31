@@ -16,14 +16,14 @@ import {
   Loader2,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import api from '../../api/axiosInstance';
+import { getRecruiterProfile, updateRecruiterProfile as apiUpdateCompanyProfile } from '../../api/recruiter';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 const fetchCompanyProfile = () =>
-  api.get('/recruiter/profile').then((r) => r.data.data);
+  getRecruiterProfile().then((r) => r.data);
 
 const updateCompanyProfile = (payload) =>
-  api.put('/recruiter/profile', payload).then((r) => r.data.data);
+  apiUpdateCompanyProfile(payload).then((r) => r.data);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const RecruiterProfile = () => {
@@ -230,6 +230,7 @@ const RecruiterProfile = () => {
                   name="email"
                   value={form.email}
                   onChange={handleChange}
+                  placeholder="hr@company.com"
                   className="w-full px-5 py-3 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-medium"
                 />
               </div>

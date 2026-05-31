@@ -17,3 +17,13 @@ export const getCurrentUser = async () => {
   const response = await api.get('/auth/me');
   return response.data;
 };
+
+export const changeEmail = async (payload) => {
+  const response = await api.post('/auth/change-email', payload);
+  return response.data;
+};
+
+export const changePassword = async (payload) => {
+  const response = await api.post('/auth/change-password', payload);
+  return response.data;
+};

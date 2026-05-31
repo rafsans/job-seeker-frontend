@@ -22,7 +22,11 @@ import JobApplicantsDetail from './pages/recruiter/JobApplicantsDetail';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import { useState } from 'react';
+
 function App() {
+  const [isPremium, setIsPremium] = useState(false);
+
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
@@ -59,8 +63,8 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                <DashboardLayout role="seeker">
-                  <JobSeekerDashboard />
+                <DashboardLayout role="seeker" isPremium={isPremium}>
+                  <JobSeekerDashboard isPremium={isPremium} setIsPremium={setIsPremium} />
                 </DashboardLayout>
               }
             />
@@ -163,8 +167,8 @@ function App() {
             <Route
               path="/dashboard/resume"
               element={
-                <DashboardLayout role="seeker">
-                  <ResumeManagement />
+                <DashboardLayout role="seeker" isPremium={isPremium}>
+                  <ResumeManagement isPremium={isPremium} setIsPremium={setIsPremium} />
                 </DashboardLayout>
               }
             />
