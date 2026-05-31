@@ -77,11 +77,11 @@ const JobSeekerDashboard = ({ isPremium, setIsPremium }) => {
   
   // Fallback to random/sequential if no AI jobs matched
   if (aiJobs.length === 0) {
-    aiJobs = jobs.slice(3, 7);
+    aiJobs = jobs.slice(3);
   }
   
   // Limit based on premium status
-  aiJobs = isPremium ? aiJobs.slice(0, 10) : aiJobs.slice(0, 4);
+  aiJobs = isPremium ? aiJobs : aiJobs.slice(0, 4);
 
   const renderSubscriptionModal = () => {
     if (!showSubscription) return null;
