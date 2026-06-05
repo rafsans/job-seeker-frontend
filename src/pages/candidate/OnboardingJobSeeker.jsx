@@ -40,6 +40,7 @@ const OnboardingJobSeeker = () => {
     // Step 2: Education
     education: [{ institution: '', degree: '', fieldOfStudy: '', startDate: '', endDate: '', isCurrent: false, grade: '', description: '' }],
     // Step 3: Experience
+    hasNoExperience: false,
     experience: [{ companyName: '', position: '', employmentType: '', location: '', locationType: '', startDate: '', endDate: '', isCurrent: false, description: '', achievement: '' }],
     // Step 4: Skills & Certs
     skills: [],
@@ -62,7 +63,7 @@ const OnboardingJobSeeker = () => {
         const data = response.data;
         if (data) {
           // If already has resumeUrl, redirect to dashboard
-          if (data.userDetails) {
+          if (data.userDetails && data.userDetails.resumeUrl) {
               const userStr = localStorage.getItem('user');
               if (userStr) {
                 try {
@@ -105,6 +106,7 @@ const OnboardingJobSeeker = () => {
               }));
             }
             if (data.experiences && data.experiences.length > 0) {
+              updated.hasNoExperience = false;
               updated.experience = data.experiences.map(exp => ({
                 companyName: exp.companyName || '',
                 position: exp.position || '',
@@ -117,6 +119,9 @@ const OnboardingJobSeeker = () => {
                 description: exp.description || '',
                 achievement: exp.achievement || '',
               }));
+            } else if (data.userDetails) {
+              updated.hasNoExperience = true;
+              updated.experience = [];
             }
             return updated;
           });
@@ -157,6 +162,7 @@ const OnboardingJobSeeker = () => {
   };
 
   const isStep3Valid = () => {
+    if (formData.hasNoExperience) return true;
     const experience = formData.experience || [];
     if (experience.length === 0) return false;
     return experience.every(exp => 
@@ -214,7 +220,8 @@ const OnboardingJobSeeker = () => {
       } else if (step === 2) {
         await saveEducationInfo({ education: formData.education });
       } else if (step === 3) {
-        await saveExperienceInfo({ experience: formData.experience });
+        const expData = formData.hasNoExperience ? [] : formData.experience;
+        await saveExperienceInfo({ experience: expData });
       } else if (step === 4) {
         const certifications = formData.certifications
           .map((cert) => ({

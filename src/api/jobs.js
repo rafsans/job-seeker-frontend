@@ -41,3 +41,9 @@ export const getMyApplications = async () => {
   const response = await api.get('/jobs/applications');
   return response.data;
 };
+
+// Candidate: Get AI recommended jobs
+export const getRecommendedJobs = async () => {
+  const response = await api.get('/jobs/recommended');
+  return response.data;
+};

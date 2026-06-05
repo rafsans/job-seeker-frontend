@@ -130,7 +130,7 @@ const Register = () => {
       toast.success(response.message || "Registration successful!");
       
       setTimeout(() => {
-        navigate("/");
+        navigate("/login");
       }, 1500);
     } catch (err) {
       const data = err.response?.data;
@@ -247,7 +247,7 @@ const Register = () => {
       </form>
       <p className="text-gray-500">
         Already have an account?{" "}
-        <Link to="/" className="text-[#0052FF] font-semibold hover:underline">
+        <Link to="/login" className="text-[#0052FF] font-semibold hover:underline">
           Sign in
         </Link>
       </p>

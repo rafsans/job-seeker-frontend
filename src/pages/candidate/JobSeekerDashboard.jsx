@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Loader2
 } from 'lucide-react';
-import { getJobs } from '../../api/jobs';
+import { getJobs, getRecommendedJobs } from '../../api/jobs';
 import { getCandidateProfile } from '../../api/candidateProfile';
 
 const formatIDR = (amount) => {
@@ -35,24 +35,28 @@ const normalizeJobType = (type) => {
 const JobSeekerDashboard = ({ isPremium, setIsPremium }) => {
   const [showSubscription, setShowSubscription] = useState(false);
   
-  // State for data
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [aiJobsData, setAiJobsData] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [profileRes, jobsRes] = await Promise.all([
+        const [profileRes, jobsRes, recommendedRes] = await Promise.all([
           getCandidateProfile().catch(() => null), // Catch error if no profile yet
-          getJobs()
+          getJobs().catch(() => ({ data: [] })),
+          getRecommendedJobs().catch(() => ({ data: [] }))
         ]);
         
         setUserProfile(profileRes);
         // Take the first 3 jobs as recommended, next 4 as AI (just for UI demo)
-        const allJobs = Array.isArray(jobsRes.data) ? jobsRes.data : [];
+        const allJobs = Array.isArray(jobsRes?.data) ? jobsRes.data : [];
         setJobs(allJobs);
+
+        const aiRecommended = Array.isArray(recommendedRes?.data) ? recommendedRes.data : [];
+        setAiJobsData(aiRecommended);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
@@ -70,15 +74,7 @@ const JobSeekerDashboard = ({ isPremium, setIsPremium }) => {
   const topCategoriesData = userProfile?.top_categories || {};
   const topCategories = [topCategoriesData.category1, topCategoriesData.category2, topCategoriesData.category3].filter(Boolean);
   
-  let aiJobs = [];
-  if (topCategories.length > 0) {
-    aiJobs = jobs.filter(job => job.category && topCategories.includes(job.category.title));
-  }
-  
-  // Fallback to random/sequential if no AI jobs matched
-  if (aiJobs.length === 0) {
-    aiJobs = jobs.slice(3);
-  }
+  let aiJobs = [...aiJobsData];
   
   // Limit based on premium status
   aiJobs = isPremium ? aiJobs : aiJobs.slice(0, 4);
@@ -179,7 +175,7 @@ const JobSeekerDashboard = ({ isPremium, setIsPremium }) => {
           {/* General Recommendations */}
           <section className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900">Recommended Jobs</h2>
+              <h2 className="text-xl font-bold text-gray-900">Explore Jobs</h2>
               <Link to="/dashboard/find-jobs" className="text-[#0052FF] font-bold text-sm hover:underline">View all</Link>
             </div>
             

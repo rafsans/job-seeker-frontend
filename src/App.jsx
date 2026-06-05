@@ -22,6 +22,7 @@ import JobApplicantsDetail from './pages/recruiter/JobApplicantsDetail';
 import Settings from './pages/Settings';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import LandingPage from './pages/LandingPage';
 import { useState } from 'react';
 
 function App() {
@@ -35,6 +36,10 @@ function App() {
           {/* Public Routes */}
           <Route
             path="/"
+            element={<LandingPage />}
+          />
+          <Route
+            path="/login"
             element={
               <AuthLayout>
                 <Login />

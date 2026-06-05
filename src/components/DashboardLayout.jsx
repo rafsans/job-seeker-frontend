@@ -45,7 +45,7 @@ const DashboardLayout = ({ children, role = 'seeker', isPremium = false }) => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/');
+    navigate('/login');
   };
 
   const seekerItems = [

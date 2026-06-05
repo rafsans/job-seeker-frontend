@@ -42,12 +42,33 @@ const ExperienceStep = ({ formData, setFormData }) => {
           variant="ghost" 
           size="sm" 
           className="text-[#0052FF] hover:text-blue-600 gap-1 font-semibold"
+          disabled={formData.hasNoExperience}
         >
           <Plus size={18} /> Add Experience
         </Button>
       </div>
 
-      {experience.map((exp, index) => (
+      <div className="flex items-center gap-3 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl mb-6">
+        <input 
+          type="checkbox" 
+          id="noExperience" 
+          checked={formData.hasNoExperience || false}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            setFormData(prev => ({ 
+              ...prev, 
+              hasNoExperience: checked,
+              experience: checked ? [] : (prev.experience?.length ? prev.experience : [{ companyName: '', position: '', employmentType: '', location: '', locationType: '', startDate: '', endDate: '', isCurrent: false, description: '', achievement: '' }])
+            }));
+          }}
+          className="w-5 h-5 accent-[#0052FF] cursor-pointer rounded" 
+        />
+        <label htmlFor="noExperience" className="text-gray-700 font-medium cursor-pointer select-none">
+          I don't have any work experience (Fresh Graduate)
+        </label>
+      </div>
+
+      {!formData.hasNoExperience && experience.map((exp, index) => (
         <div 
           key={index} 
           className="bg-gray-50 p-6 rounded-2xl border border-gray-100 relative space-y-6"
